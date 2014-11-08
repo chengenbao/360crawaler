@@ -14,16 +14,12 @@ import java.util.concurrent.locks.ReentrantLock;
 public class DictFile {
 	private final static Logger logger = Logger.getLogger();
 	private FileOutputStream fos = null;
-	private FileChannel outChannel = null;
 	private FileInputStream fin = null;
-	private FileChannel inChannel = null;
 	
 	public DictFile() {
 		try {
 			fos = new FileOutputStream(Util.SAVE_FILE_NAME, true);
-			outChannel = fos.getChannel();
 			fin = new FileInputStream(Util.SAVE_FILE_NAME);
-			inChannel = fin.getChannel();
 		} catch (FileNotFoundException e) {
 			logger.log(e.getMessage());
 		}
@@ -79,6 +75,7 @@ public class DictFile {
 		for (String word : words) {
 			if (!find(word)) {
 				try {
+					fos.write(",".getBytes());
 					fos.write(word.getBytes());
 					fos.flush();
 					++size;
