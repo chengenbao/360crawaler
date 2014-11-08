@@ -102,7 +102,7 @@ public class Indexer {
 			StringBuilder sb = new StringBuilder();
 			sb.append(Util.PAGES_DIR);
 			sb.append("/");
-			sb.append(messageDigest.digest());
+			sb.append(getFormattedText(messageDigest.digest()));
 			sb.append(Util.PAGE_TMP_FILE_SUFFIX);
 			
 			String filename = sb.toString();
@@ -253,11 +253,16 @@ public class Indexer {
 			fin.close();
 			
 			String page = sb.toString();
-			List<String> words = processPage(page);
-			
-			for (String word: words) {
-				System.out.println(word);
+			MessageDigest messageDigest;
+			try {
+				messageDigest = MessageDigest.getInstance("SHA1");
+				messageDigest.update(page.getBytes());
+				System.out.println(getFormattedText(messageDigest.digest()));
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			
 		} catch (IOException e) {
 			logger.log(e.getMessage());
 		}
