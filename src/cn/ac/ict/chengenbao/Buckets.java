@@ -175,6 +175,8 @@ public class Buckets {
 	}
 	
 	public static void main(String[] args) {
-		
+		DictFile dict = new DictFile();
+		System.out.println(dict.find("apple4s¹ÙÍø"));
+		dict.close();
 	}
 }

@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -69,8 +71,9 @@ public class DictFile {
 	 */
 	public int write(List<String> words) {
 		int size = 0;
+		Set<String> wordSet = new HashSet<String>(words); // remove duplicated words
 
-		for (String word : words) {
+		for (String word : wordSet) {
 			if (!find(word)) {
 				try {
 					fos.write(",".getBytes());
