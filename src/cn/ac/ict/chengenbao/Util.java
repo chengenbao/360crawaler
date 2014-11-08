@@ -20,5 +20,7 @@ public class Util {
 	public final static String SEARCH_PATTERN = "Ïà¹ØËÑË÷</th>";
 	public final static int TARGET_COUNT = 100000;
 	public final static int PERSISTENT_COUNT = 5000;
+	public final static int BATCH_SIZE = 50;
+	public final static int SAVE_COUNT = 500;
 	public final static String WORD_SPLIT_CHAR = ",";
 }

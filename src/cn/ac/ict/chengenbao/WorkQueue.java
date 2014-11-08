@@ -15,9 +15,7 @@ public class WorkQueue {
 
 	public String getWord() {
 		try {
-			
-			 return words.take();
-			 
+			 return words.poll(2, TimeUnit.SECONDS);	 
 		} catch (InterruptedException e) {
 			logger.log(e.getMessage());
 			return null;

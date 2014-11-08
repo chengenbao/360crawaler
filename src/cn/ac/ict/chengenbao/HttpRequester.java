@@ -100,8 +100,6 @@ public class HttpRequester {
 		
 		// send to server
 		sb.append("\r\n");
-		
-		System.out.println(uri);
 		return sb.toString();
 	}
 	
