@@ -11,10 +11,10 @@ import java.util.List;
  */
 public class Util {
 	public final static  String SAVE_FILE_NAME = "words.txt";
-	public final static int CRAWLER_WORKER_NUMBER = 8;
+	public final static int CRAWLER_WORKER_NUMBER = 15;
 	public final static int BUCKET_CACHE_SIZE = 1000;
 	public final static int WORK_QUEUE_SIZE = 2000;
-	public final static int INDEXER_WORKER_NUMBER = 4;
+	public final static int INDEXER_WORKER_NUMBER = 6;
 	public final static int INDEXER_CACHE_SIZE = 1000;
 	public final static int SLEEP_MAX_SECONDS = 20;
 	public final static String SEARCH_PATTERN = "Ïà¹ØËÑË÷</th>";

@@ -74,32 +74,17 @@ public class DictFile {
 	 * @return the
 	 */
 	public int write(List<String> words) {
-		FileLock lock = null;
-		try {
-			lock = outChannel.lock();
-		} catch (IOException e) {
-			logger.log(e.getMessage());
-		}
-		
 		int size = 0;
-		
-		if (lock != null) {
-			for(String word: words) {
-				if (!find(word)) {
-					try {
-						fos.write(word.getBytes());
-						fos.flush();
-						++size;
-					} catch (IOException e) {
-						logger.log(e.getMessage());
-					}
+
+		for (String word : words) {
+			if (!find(word)) {
+				try {
+					fos.write(word.getBytes());
+					fos.flush();
+					++size;
+				} catch (IOException e) {
+					logger.log(e.getMessage());
 				}
-			}
-			
-			try {
-				lock.release();
-			} catch (IOException e) {
-				logger.log(e.getMessage());
 			}
 		}
 		return size;
