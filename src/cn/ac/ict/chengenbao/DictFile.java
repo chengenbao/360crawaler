@@ -14,12 +14,10 @@ import java.util.concurrent.locks.ReentrantLock;
 public class DictFile {
 	private final static Logger logger = Logger.getLogger();
 	private FileOutputStream fos = null;
-	private FileInputStream fin = null;
 	
 	public DictFile() {
 		try {
 			fos = new FileOutputStream(Util.SAVE_FILE_NAME, true);
-			fin = new FileInputStream(Util.SAVE_FILE_NAME);
 		} catch (FileNotFoundException e) {
 			logger.log(e.getMessage());
 		}
@@ -29,7 +27,7 @@ public class DictFile {
 		try {
 			byte[] buffer = new byte[1024];
 			long num = 0;
-
+			FileInputStream fin = new FileInputStream(Util.SAVE_FILE_NAME);
 			while ((num = fin.read(buffer)) != -1) {
 				int lastPos = 0;
 				if (buffer[lastPos] == 44) {
@@ -55,7 +53,7 @@ public class DictFile {
 				}
 			} // while end
 			
-			fin.reset();
+			fin.close();
 		} catch (IOException e) {
 			logger.log(e.getMessage());
 		}
@@ -85,14 +83,5 @@ public class DictFile {
 			}
 		}
 		return size;
-	}
-	
-	public void close() {
-		try {
-			fos.close();
-			fin.close();
-		} catch (IOException e) {
-			logger.log(e.getMessage());
-		}
 	}
 }
