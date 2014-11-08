@@ -2,8 +2,11 @@ package cn.ac.ict.chengenbao;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,12 +28,10 @@ public class Buckets {
 	private LinkedBlockingQueue<String> crawledWords = null; // has
 																						// been
 																						// crawed
-	private int cacheSize = 0;
 	private boolean stopped = false;
 	private final static Logger logger = Logger.getLogger();
-	private boolean dirty = false;
 	private Integer crawedWordCount = 0;
-	private Lock fileLock = new ReentrantLock();
+	private DictFile dicFile = new DictFile();
 
 	public Buckets(int cacheSz) {
 		// TODO Auto-generated constructor stub
@@ -39,12 +40,12 @@ public class Buckets {
 	}
 
 	public void persistent() {
-		saveCrawledWords();
-
-		List<String> words = new ArrayList<String>(cache);
+		List<String> words = new ArrayList<String>(cache); //存储未检索单词
+		saveDictFile(words); 
 		cache.clear();
+		
+		saveCrawledWords(); // 存储已经搜索的单词
 		crawledWords.clear();
-		saveDictFile(words);
 	}
 
 	public void addWords(List<String> words) {
@@ -83,60 +84,12 @@ public class Buckets {
 		Set<String> tmp = null;
 		tmp = new HashSet<String>(crawledWords);
 		
-		return cache.contains(word) || tmp.contains(word) || findInDictFile(word);
-	}
-
-	private boolean findInDictFile(String word) {
-		// check the file
-		if (dirty) { // dict file has been writen
-			try {
-				FileInputStream fin = new FileInputStream(Util.SAVE_FILE_NAME);
-				byte[] buffer = new byte[1024];
-				int num = 0;
-
-				fileLock.lock();
-				while ((num = fin.read(buffer)) != -1) {
-					int lastPos = 0;
-					fileLock.unlock();
-					if (buffer[lastPos] == 44) {
-						++lastPos;
-					}
-
-					for (int i = lastPos; i < num; ++i) { // find ',' in buffer
-						int len = i - lastPos;
-						if (buffer[i] == 44) {  // get it
-							for (byte b : word.getBytes()) { // compare every byte
-								if (b != buffer[lastPos]) {
-									break;
-								}
-								++lastPos;
-							}
-
-							if (len == word.getBytes().length && lastPos == i) { 
-								fileLock.unlock();
-								return true;
-							}
-
-							lastPos = i + 1;
-						}
-					}
-				}			
-			} catch (IOException e) {
-				if ( fileLock.tryLock()) {
-					fileLock.unlock();
-				}
-				
-				logger.log(e.getMessage());
-			} 
-		}
-		
-		return false;
+		return cache.contains(word) || tmp.contains(word);
 	}
 
 	private boolean checkForTerminate() {
 		int count = 0;
 		
-		count += cache.size();
 		synchronized(crawedWordCount) {
 			count += crawedWordCount;
 		}
@@ -149,33 +102,14 @@ public class Buckets {
 		return shouldTerminated;
 	}
 
+	/**
+	 * 写入dict文件， 保证没有重复
+	 * @param words
+	 */
 	private void saveDictFile(List<String> words) {
-		System.out.println(" ========================== writing file started ======================");
-		System.out.println(" ========================== writing file started 1======================");
-		FileWriter writer = null;
-
-		try {
-			writer = new FileWriter(Util.SAVE_FILE_NAME, true);
-
-			if (writer != null) {
-				for (String word : words) {
-					fileLock.lock();
-					writer.write(Util.WORD_SPLIT_CHAR + word);
-					fileLock.unlock();
-				}
-				writer.close();
-			}
-			
-			dirty = true;
-		} catch (IOException e) {
-			if ( fileLock.tryLock()) {
-				fileLock.unlock();
-			}
-			
-			logger.log(e.getMessage());
-		} 
-		
-		System.out.println(" ========================== writing file end ======================");
+		synchronized(crawedWordCount) {
+			crawedWordCount = dicFile.write(words);
+		}
 	}
 
 	public void start() {
@@ -212,6 +146,13 @@ public class Buckets {
 
 	public void stop() {
 		stopped = true;
+		
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			logger.log(e.getMessage());
+		}
+		
 		persistent();
 	}
 
@@ -223,9 +164,6 @@ public class Buckets {
 		int count  = crawledWords.size();
 		System.out.println("================ words count " + count + " ===========================\n");
 		
-		synchronized(crawedWordCount) {
-			crawedWordCount += words.size();	
-		}
 		
 		if (! checkForTerminate()) {		
 			boolean pers = (count >= Util.PERSISTENT_COUNT);
@@ -235,16 +173,7 @@ public class Buckets {
 		}
 	}
 	
-
-	public void setDirty(boolean dirty) {
-		this.dirty = dirty;
-	}
-	
 	public static void main(String[] args) {
-		Buckets bkt = new Buckets(128);
-		bkt.setDirty(true);
 		
-		boolean suc = bkt.findInDictFile("jquery选择");
-		System.out.println(suc);
 	}
 }
