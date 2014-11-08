@@ -84,4 +84,12 @@ public class DictFile {
 		}
 		return size;
 	}
+	
+	public void close() {
+		try {
+			fos.close();
+		} catch (IOException e) {
+			logger.log(e.getMessage());
+		}
+	}
 }

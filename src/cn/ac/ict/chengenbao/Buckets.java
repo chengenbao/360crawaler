@@ -154,6 +154,7 @@ public class Buckets {
 		}
 		
 		persistent();
+		dicFile.close();
 	}
 
 	private void saveToCrawledWords(List<String> words) {
