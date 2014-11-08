@@ -35,7 +35,7 @@ public class Buckets {
 	public Buckets(int cacheSz) {
 		// TODO Auto-generated constructor stub
 		cache = new LinkedBlockingQueue<String>(cacheSz);
-		crawledWords = new LinkedBlockingQueue<String>();
+		crawledWords = new LinkedBlockingQueue<String>(Util.PERSISTENT_COUNT + Util.SAVE_COUNT);
 	}
 
 	public void persistent() {
@@ -87,7 +87,6 @@ public class Buckets {
 	}
 
 	private boolean findInDictFile(String word) {
-		fileLock.lock();
 		// check the file
 		if (dirty) { // dict file has been writen
 			try {
@@ -95,9 +94,10 @@ public class Buckets {
 				byte[] buffer = new byte[1024];
 				int num = 0;
 
-				while ((num = fin.read()) != -1) {
+				fileLock.lock();
+				while ((num = fin.read(buffer)) != -1) {
 					int lastPos = 0;
-
+					fileLock.unlock();
 					if (buffer[lastPos] == 44) {
 						++lastPos;
 					}
@@ -122,10 +122,12 @@ public class Buckets {
 					}
 				}			
 			} catch (IOException e) {
+				if ( fileLock.tryLock()) {
+					fileLock.unlock();
+				}
+				
 				logger.log(e.getMessage());
-			} finally {
-				fileLock.lock();
-			}
+			} 
 		}
 		
 		return false;
@@ -139,7 +141,6 @@ public class Buckets {
 			count += crawedWordCount;
 		}
 		
-		System.out.println("================ words count " + count + " ===========================\n");
 		boolean shouldTerminated = (count >= Util.TARGET_COUNT);
 		if (shouldTerminated) {
 			Scheduler.getInstance().stop();
@@ -149,8 +150,8 @@ public class Buckets {
 	}
 
 	private void saveDictFile(List<String> words) {
-		
-		fileLock.lock();
+		System.out.println(" ========================== writing file started ======================");
+		System.out.println(" ========================== writing file started 1======================");
 		FileWriter writer = null;
 
 		try {
@@ -158,17 +159,23 @@ public class Buckets {
 
 			if (writer != null) {
 				for (String word : words) {
+					fileLock.lock();
 					writer.write(Util.WORD_SPLIT_CHAR + word);
+					fileLock.unlock();
 				}
 				writer.close();
 			}
 			
 			dirty = true;
 		} catch (IOException e) {
+			if ( fileLock.tryLock()) {
+				fileLock.unlock();
+			}
+			
 			logger.log(e.getMessage());
-		} finally {
-			fileLock.lock();
-		}
+		} 
+		
+		System.out.println(" ========================== writing file end ======================");
 	}
 
 	public void start() {
@@ -213,17 +220,31 @@ public class Buckets {
 			crawledWords.add(word);
 		}
 		
-		int count  =crawledWords.size();
+		int count  = crawledWords.size();
+		System.out.println("================ words count " + count + " ===========================\n");
 		
 		synchronized(crawedWordCount) {
 			crawedWordCount += words.size();	
 		}
 		
 		if (! checkForTerminate()) {		
-			boolean pers = (count > Util.PERSISTENT_COUNT);
+			boolean pers = (count >= Util.PERSISTENT_COUNT);
 			if (pers) {
 				saveCrawledWords();
 			}
 		}
+	}
+	
+
+	public void setDirty(boolean dirty) {
+		this.dirty = dirty;
+	}
+	
+	public static void main(String[] args) {
+		Buckets bkt = new Buckets(128);
+		bkt.setDirty(true);
+		
+		boolean suc = bkt.findInDictFile("jquery—°‘Ò");
+		System.out.println(suc);
 	}
 }
