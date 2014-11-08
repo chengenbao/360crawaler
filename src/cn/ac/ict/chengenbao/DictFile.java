@@ -88,6 +88,7 @@ public class DictFile {
 				if (!find(word)) {
 					try {
 						fos.write(word.getBytes());
+						fos.flush();
 						++size;
 					} catch (IOException e) {
 						logger.log(e.getMessage());
