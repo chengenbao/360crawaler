@@ -74,7 +74,12 @@ public class Buckets {
 	}
 
 	private boolean find(String word) {
-		return cache.contains(word) || crawledWords.contains(word) || findInDictFile(word);
+		Set<String> tmp = null;
+		synchronized(crawledWords) {
+			tmp = new HashSet<String>(crawledWords);
+		}
+		
+		return cache.contains(word) || tmp.contains(word) || findInDictFile(word);
 	}
 
 	private boolean findInDictFile(String word) {
@@ -134,7 +139,8 @@ public class Buckets {
 		synchronized(crawedWordCount) {
 			count += crawedWordCount;
 		}
-
+		
+		System.out.println("================ words count " + count + " ===========================\n");
 		boolean shouldTerminated = (count >= Util.TARGET_COUNT);
 		if (shouldTerminated) {
 			Scheduler.getInstance().stop();
@@ -211,13 +217,15 @@ public class Buckets {
 			}
 		}
 		
+		int count = 0;
 		synchronized(crawedWordCount) {
 			crawedWordCount += words.size();
+			count = crawedWordCount;
 		}
 		
 		if (! checkForTerminate()) {
 		
-			boolean pers = (crawledWords.size() > Util.PERSISTENT_COUNT);
+			boolean pers = (count > Util.PERSISTENT_COUNT);
 			if (pers) {
 				saveCrawledWords();
 			}
