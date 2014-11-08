@@ -27,33 +27,37 @@ public class Crawler {
 				String url = "http://www.so.com/s?ie=utf-8&shb=1&src=360sou_newhome";
 				if (word == null) {
 					System.out.println("------------ Work queue is empty! ----------------\n");
-				}
-				
-				// random sleep
-				Random rdm = new Random(System.currentTimeMillis());
-				
-				int sec = rdm.nextInt() % Util.SLEEP_MAX_SECONDS;
-				if (sec < 0) {
-					sec = -sec;
-				}
-				sec += 5;
-				
-				try {
-					Thread.sleep(sec * 1000);
-				} catch (InterruptedException e) {
-					logger.log(e.getMessage());
-				}
-				
-				if (word != null) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						logger.log(e.getMessage());
+					}
+				} else {
+					System.out.println("==================="  + word + "===================");
+					// random sleep
+					Random rdm = new Random(System.currentTimeMillis());
+
+					int sec = rdm.nextInt() % Util.SLEEP_MAX_SECONDS;
+					if (sec < 0) {
+						sec = -sec;
+					}
+					sec += 5;
+
+					try {
+						Thread.sleep(sec * 1000);
+					} catch (InterruptedException e) {
+						logger.log(e.getMessage());
+					}
 					Map<String, String> fields = new HashMap<String, String>();
 					fields.put("q", word);
-					
+
 					String page = requester.get(url, fields);
 					Scheduler.getInstance().getIndexer().addPage(page);
 				}
 			}
+
 		}
-		
+
 	}
 	
 	public Crawler(int workernum) {

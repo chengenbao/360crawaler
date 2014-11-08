@@ -29,15 +29,7 @@ public class Scheduler {
 	}
 	
 	public void Start() {
-		List<String> words = new ArrayList<String>();
-		words.add("hadoop");
-		words.add("mapreduce");
-		words.add("jquery");
-		words.add("mongodb");
-		words.add("bigtable");
-		words.add("apple");
-		
-		workQueue.addWords(words);
+		workQueue.addWords(Util.SEED_WORDS);
 		crawler.start();
 		indexer.start();
 		buckets.start();

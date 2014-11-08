@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
 /**
@@ -20,7 +22,7 @@ import java.util.logging.Level;
  */
 public class Buckets {
 	private LinkedBlockingQueue<String> cache = null;
-	private Set<String> crawledWords = null; // has
+	private LinkedBlockingQueue<String> crawledWords = null; // has
 																						// been
 																						// crawed
 	private int cacheSize = 0;
@@ -28,17 +30,18 @@ public class Buckets {
 	private final static Logger logger = Logger.getLogger();
 	private boolean dirty = false;
 	private Integer crawedWordCount = 0;
+	private Lock fileLock = new ReentrantLock();
 
 	public Buckets(int cacheSz) {
 		// TODO Auto-generated constructor stub
 		cache = new LinkedBlockingQueue<String>(cacheSz);
-		crawledWords = new HashSet<String>();
+		crawledWords = new LinkedBlockingQueue<String>();
 	}
 
 	public void persistent() {
 		saveCrawledWords();
 
-		List<String> words = new ArrayList(cache);
+		List<String> words = new ArrayList<String>(cache);
 		cache.clear();
 		crawledWords.clear();
 		saveDictFile(words);
@@ -57,78 +60,74 @@ public class Buckets {
 	}
 
 	private void saveCrawledWords() {
-		List<String> words = null;
+		List<String> words = new ArrayList<String>();
 		int i = 0;
-		synchronized(crawledWords) {
-			for(String word: crawledWords) {
-				words.add(word);
-				crawledWords.remove(word);
-				++i;
-				if (i >= Util.SAVE_COUNT) {
-					break;
+		
+		while( i < Util.SAVE_COUNT) {
+			String word;
+			try {
+				word = crawledWords.poll(1, TimeUnit.SECONDS);
+				if (word != null) {
+					words.add(word);
 				}
-			}
+			} catch (InterruptedException e) {
+				logger.log(e.getMessage());
+			}	
+			++i;
 		}
-
+		
 		saveDictFile(words);
 	}
 
 	private boolean find(String word) {
 		Set<String> tmp = null;
-		synchronized(crawledWords) {
-			tmp = new HashSet<String>(crawledWords);
-		}
+		tmp = new HashSet<String>(crawledWords);
 		
 		return cache.contains(word) || tmp.contains(word) || findInDictFile(word);
 	}
 
 	private boolean findInDictFile(String word) {
-		boolean beDirtied = false;
-
-		synchronized (Util.SAVE_FILE_NAME) {
-			beDirtied = dirty;
-		}
-		
+		fileLock.lock();
 		// check the file
-		if (beDirtied) { // dict file has been writen
-			synchronized (Util.SAVE_FILE_NAME) {
-				try {
-					FileInputStream fin = new FileInputStream(Util.SAVE_FILE_NAME);
-					byte[] buffer = new byte[1024];
-					int num = 0;
-					
-					while((num = fin.read()) != -1) {
-						int lastPos = 0;
-						
-						if ( buffer[lastPos] == 44) {
-							++lastPos;
-						}
-						
-						for(int i = lastPos; i < num; ++i) { // find ',' in buffer
-							int len = i - lastPos;
-							if ( buffer[i] == 44 ) { // get it
-								for(byte b : word.getBytes()) { // compare every byte
-									if (b != buffer[lastPos]) {
-										break;
-									}
-									
-									++lastPos;
-								}
-								
-								if (len == word.getBytes().length && lastPos == i) { // stop at ','
-									return true;
-								}
-								
-								lastPos = i + 1;
-							}
-						}
+		if (dirty) { // dict file has been writen
+			try {
+				FileInputStream fin = new FileInputStream(Util.SAVE_FILE_NAME);
+				byte[] buffer = new byte[1024];
+				int num = 0;
+
+				while ((num = fin.read()) != -1) {
+					int lastPos = 0;
+
+					if (buffer[lastPos] == 44) {
+						++lastPos;
 					}
 
-				} catch (IOException e) {
-					logger.log(e.getMessage());
-				}
+					for (int i = lastPos; i < num; ++i) { // find ',' in buffer
+						int len = i - lastPos;
+						if (buffer[i] == 44) {  // get it
+							for (byte b : word.getBytes()) { // compare every byte
+								if (b != buffer[lastPos]) {
+									break;
+								}
+								++lastPos;
+							}
+
+							if (len == word.getBytes().length && lastPos == i) { 
+								fileLock.unlock();
+								return true;
+							}
+
+							lastPos = i + 1;
+						}
+					}
+				}			
+			} catch (IOException e) {
+				logger.log(e.getMessage());
+			} finally {
+				fileLock.lock();
 			}
 		}
+		
 		return false;
 	}
 
@@ -151,26 +150,25 @@ public class Buckets {
 
 	private void saveDictFile(List<String> words) {
 		
-		synchronized (Util.SAVE_FILE_NAME) {
-			FileWriter writer = null;
+		fileLock.lock();
+		FileWriter writer = null;
 
-			try {
-				writer = new FileWriter(Util.SAVE_FILE_NAME, true);
+		try {
+			writer = new FileWriter(Util.SAVE_FILE_NAME, true);
 
-				if (writer != null) {
-					for (String word : words) {
-						writer.write(Util.WORD_SPLIT_CHAR + word);
-					}
-					writer.close();
+			if (writer != null) {
+				for (String word : words) {
+					writer.write(Util.WORD_SPLIT_CHAR + word);
 				}
-
-			} catch (IOException e) {
-				logger.log(e.getMessage());
+				writer.close();
 			}
 			
 			dirty = true;
+		} catch (IOException e) {
+			logger.log(e.getMessage());
+		} finally {
+			fileLock.lock();
 		}
-		
 	}
 
 	public void start() {
@@ -211,20 +209,17 @@ public class Buckets {
 	}
 
 	private void saveToCrawledWords(List<String> words) {
-		synchronized (crawledWords) {
-			for (String word : words) {
-				crawledWords.add(word);
-			}
+		for (String word : words) {
+			crawledWords.add(word);
 		}
 		
-		int count = 0;
+		int count  =crawledWords.size();
+		
 		synchronized(crawedWordCount) {
-			crawedWordCount += words.size();
-			count = crawedWordCount;
+			crawedWordCount += words.size();	
 		}
 		
-		if (! checkForTerminate()) {
-		
+		if (! checkForTerminate()) {		
 			boolean pers = (count > Util.PERSISTENT_COUNT);
 			if (pers) {
 				saveCrawledWords();
