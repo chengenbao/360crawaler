@@ -131,26 +131,33 @@ public class Indexer {
 		pool.shutdown();
 	}
 	
+	/**
+	 * 
+	 * @param page, 待处理的网页
+	 * @return 单词列表
+	 */
+	
 	private static List<String> processPage(String page) {
 		List<String> words = new ArrayList<String>();
 		
-		String[] lines = page.split("\n");
-		int i = 0;
-		
-		for(String line: lines) {
-			if (line.contains(Util.SEARCH_PATTERN)) {
-				break;
-			}
-			++i;
+		int index = page.indexOf(Util.SEARCH_PATTERN);
+		if ( index == -1) {
+			return words;
 		}
-		// next line is target line
-		if ( i + 1 < lines.length ) { // found
-			String target = lines[i + 1];
+		
+		// 找到下一个换行符
+		index = page.indexOf("\n", index);
+		if ( index == -1) {
+			return words;
+		}
+		int endIndex = page.indexOf("\n", index + 1);
+		if ( endIndex != -1 ) { // found
+			String target = page.substring(index, endIndex);
 			String[] arr = target.split("data-type=\"0\">");
 			
-			for( i = 1; i < arr.length; ++i) {
+			for( int i = 1; i < arr.length; ++i) {
 				// find "<"
-				int index = arr[i].indexOf("<");
+				index = arr[i].indexOf("<");
 				if (index != -1) {
 					words.add(arr[i].substring(0, index));
 				}
@@ -196,13 +203,7 @@ public class Indexer {
 						StringBuilder sb = new StringBuilder();
 
 						while ((num = fin.read(buffer)) != -1) {
-							if (num == buffer.length) {
-								sb.append(buffer);
-							} else {
-								for (int i = 0; i < num; ++i) {
-									sb.append(buffer[i]);
-								}
-							}
+							sb.append(new String(buffer, 0, num));
 						}// read end
 						fin.close();
 
@@ -274,10 +275,26 @@ public class Indexer {
 	}
 	
 	public static void main(String[] args) {
-		Set<String> result = processWord("中国hadoop");
-		
-		for(String str: result) {
-			System.out.println(str);
+		try {
+			FileInputStream fin = new FileInputStream("output.txt");
+			
+			StringBuilder sb = new StringBuilder();
+			byte[] buffer = new byte[1024];
+			int num = 0;
+			
+			while((num = fin.read(buffer)) != -1) {
+				sb.append(new String(buffer, 0, num));
+			}
+			
+			String page = sb.toString();
+			List<String> words = processPage(page);
+			
+			for(String word: words) {
+				System.out.println(word);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

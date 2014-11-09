@@ -50,13 +50,7 @@ public class Util {
 			StringBuilder sb = new StringBuilder();
 			
 			while( (num = fin.read(buffer)) != -1 ) {
-				if (num == buffer.length) {
-					sb.append(buffer);
-				} else {
-					for(int i = 0; i < num; ++i) {
-						sb.append(buffer[i]);
-					}
-				}
+				sb.append(new String(buffer, 0, num));
 			}
 			
 			fin.close();
@@ -69,6 +63,7 @@ public class Util {
 				}
 				String key = arr[0].trim();
 				String value = arr[1].trim();
+				
 				if (key.equals("workqueue.size")) {
 					Util.WORK_QUEUE_SIZE = Integer.parseInt(value);
 				} else if (key.equals("bucket.cache_size")) {
@@ -87,7 +82,7 @@ public class Util {
 					Util.BATCH_SIZE = Integer.parseInt(value);
 				} else if (key.equals("bucket.save_count")) {
 					Util.SAVE_COUNT = Integer.parseInt(value);
-				} else if (key.equals("bucket.work_split_char")) {
+				} else if (key.equals("bucket.word_split_char")) {
 					Util.WORD_SPLIT_CHAR = Byte.parseByte(value);
 				} else if (key.equals("indexer.pages_dir")) {
 					Util.PAGES_DIR = value;

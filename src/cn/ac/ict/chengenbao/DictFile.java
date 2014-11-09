@@ -32,13 +32,13 @@ public class DictFile {
 			FileInputStream fin = new FileInputStream(Util.SAVE_FILE_NAME);
 			while ((num = fin.read(buffer)) != -1) {
 				int lastPos = 0;
-				if (buffer[lastPos] == 44) {
+				if (buffer[lastPos] == Util.WORD_SPLIT_CHAR) {
 					++lastPos;
 				}
 
 				for (int i = lastPos; i < num; ++i) { // find ',' in buffer
 					int len = i - lastPos;
-					if (buffer[i] == 44) { // get it
+					if (buffer[i] == Util.WORD_SPLIT_CHAR) { // get it
 						for (byte b : word.getBytes()) { // compare every byte
 							if (b != buffer[lastPos]) {
 								break;
@@ -76,7 +76,7 @@ public class DictFile {
 		for (String word : wordSet) {
 			if (!find(word)) {
 				try {
-					fos.write(",".getBytes());
+					fos.write(Util.WORD_SPLIT_CHAR);
 					fos.write(word.getBytes());
 					fos.flush();
 					++size;
