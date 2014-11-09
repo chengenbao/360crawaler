@@ -313,7 +313,7 @@ public class HttpRequester {
 		//System.out.println(buildHeader("get", "/index.php", "www.baidu.com", 80, null));
 		
 		HttpRequester requester = new HttpRequester();
-		String content = requester.get("http://sug.so.360.cn/suggest?callback=suggest_so&encodein=utf-8&encodeout=utf-8&format=json&fields=word,obdata&word=css3.0%20&pq=css3.0");
+		String content = requester.get("http://www.so.com/s?ie=utf-8&shb=1&src=360sou_newhome&q=hadoop");
 		
 		try {
 			if (content != null) {

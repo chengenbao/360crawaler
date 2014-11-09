@@ -64,8 +64,9 @@ public class Buckets {
 	private void saveCrawledWords() {
 		List<String> words = new ArrayList<String>();
 		int i = 0;
+		int size = crawledWords.size();
 		
-		while( i < Util.SAVE_COUNT) {
+		while( i < size) {
 			String word;
 			try {
 				word = crawledWords.poll(1, TimeUnit.SECONDS);
