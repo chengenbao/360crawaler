@@ -108,7 +108,7 @@ public class Buckets {
 	 */
 	private void saveDictFile(List<String> words) {
 		synchronized(crawedWordCount) {
-			crawedWordCount = dicFile.write(words);
+			crawedWordCount += dicFile.write(words);
 		}
 	}
 
