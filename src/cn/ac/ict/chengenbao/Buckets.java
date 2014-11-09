@@ -32,6 +32,7 @@ public class Buckets {
 	private final static Logger logger = Logger.getLogger();
 	private Integer crawedWordCount = 0;
 	private DictFile dicFile = new DictFile();
+	private LinkedBlockingQueue<String> dictFileCache = new LinkedBlockingQueue<String>(Util.BUCKET_CACHE_SIZE);
 
 	public Buckets(int cacheSz) {
 		// TODO Auto-generated constructor stub
@@ -39,22 +40,27 @@ public class Buckets {
 	}
 
 	public void persistent() {
-		List<String> words = new ArrayList<String>(cache); //存储未检索单词
-		dicFile.write(words); 
-		cache.clear();
+		dicFile.write(dictFileCache); 
+		dictFileCache.clear();
 	}
 
 	public void addWords(Collection<String> words) {
-		if (cache.size() >= Util.BUCKET_CACHE_SIZE - Util.BATCH_SIZE) { // store
-			int count = dicFile.write(cache);
-
-			synchronized (crawedWordCount) {
-				count += crawedWordCount;
+		
+		for (String word: words) {
+			boolean suc = dictFileCache.offer(word);
+			if (!suc) {
+				int count = dicFile.write(dictFileCache);
+				synchronized (crawedWordCount) {
+					count += crawedWordCount;
+				}
+				
+				if (count >= Util.TARGET_COUNT) {
+					Scheduler.getInstance().stop();
+					return;
+				}
+				dictFileCache.clear();
 			}
-			if (count >= Util.TARGET_COUNT) {
-				Scheduler.getInstance().stop();
-				return;
-			}
+			dictFileCache.offer(word);
 		}
 		
 		for (String word : words) {
@@ -120,10 +126,24 @@ public class Buckets {
 	}
 	
 	private void loadFromDicFile() {
-		List<String> words = dicFile.loadRandomWords(Util.BATCH_SIZE);
+		// 先从dictFileCache中加载
+		for(int i = 0; i < Util.BATCH_SIZE; ++i) {
+			String e = null;
+			try {
+				e = dictFileCache.poll(1, TimeUnit.SECONDS);
+			} catch (InterruptedException e1) {
+				logger.log(e1.getMessage());
+			}
+			if (e != null) {
+				cache.offer(e);
+			}
+		}
 		
-		for(String word: words) {
-			cache.offer(word);
+		if (cache.size() == 0) {
+			List<String> words = dicFile.loadRandomWords(Util.BATCH_SIZE);
+			for (String word : words) {
+				cache.offer(word);
+			}
 		}
 	}
 
