@@ -24,11 +24,7 @@ public class WorkQueue {
 	
 	public void addWords(List<String> l) {
 		for(String word: l) {
-			try {
-				words.put(word);
-			} catch (InterruptedException e) {
-				logger.log(e.getMessage());
-			}
+			words.offer(word);
 		}
 	}
 }

@@ -65,11 +65,7 @@ public class Buckets {
 		
 		for (String word : words) {
 			if (!cache.contains(word)) {
-				try {
-					cache.offer(word, 2, TimeUnit.SECONDS);
-				} catch (InterruptedException e) {
-					logger.log(e.getMessage());
-				}
+				cache.offer(word);
 			}
 		}
 	}
