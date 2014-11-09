@@ -208,7 +208,7 @@ public class Indexer {
 						StringBuilder sb = new StringBuilder();
 
 						while ((num = fin.read(buffer)) != -1) {
-							sb.append(new String(buffer, 0, num));
+							sb.append(new String(buffer, 0, num, "UTF8"));
 						}// read end
 						fin.close();
 
