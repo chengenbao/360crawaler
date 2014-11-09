@@ -138,8 +138,8 @@ public class Indexer {
 	
 	/**
 	 * 
-	 * @param page, ´ı´¦ÀíµÄÍøÒ³
-	 * @return µ¥´ÊÁĞ±í
+	 * @param page, å¾…å¤„ç†çš„ç½‘é¡µ
+	 * @return å•è¯åˆ—è¡¨
 	 */
 	
 	private static List<String> processPage(String page) {
@@ -150,7 +150,7 @@ public class Indexer {
 			return words;
 		}
 		
-		// ÕÒµ½ÏÂÒ»¸ö»»ĞĞ·û
+		// æ‰¾åˆ°ä¸‹ä¸€ä¸ªæ¢è¡Œç¬¦
 		index = page.indexOf("\n", index);
 		if ( index == -1) {
 			return words;
@@ -192,7 +192,7 @@ public class Indexer {
 			logger.log(e.getMessage());
 		}
 
-		if (page == null) { // queue is empty£¬ enqueue
+		if (page == null) { // queue is emptyï¼Œ enqueue
 			File dir = new File(Util.PAGES_DIR);
 
 			for (File f : dir.listFiles()) {
@@ -238,7 +238,7 @@ public class Indexer {
 	/**
 	 * 
 	 * @param b
-	 * @return ×Ö·ûÊÇ²»ÊÇascii
+	 * @return å­—ç¬¦æ˜¯ä¸æ˜¯ascii
 	 */
 	private static boolean isAscii(byte b) {
 		if (b >= 0 && b < 128) {

@@ -41,11 +41,11 @@ public class Buckets {
 	}
 
 	public void persistent() {
-		List<String> words = new ArrayList<String>(cache); //´æ´¢Î´¼ìË÷µ¥´Ê
+		List<String> words = new ArrayList<String>(cache); //å­˜å‚¨æœªæ£€ç´¢å•è¯
 		saveDictFile(words); 
 		cache.clear();
 		
-		saveCrawledWords(); // ´æ´¢ÒÑ¾­ËÑË÷µÄµ¥´Ê
+		saveCrawledWords(); // å­˜å‚¨å·²ç»æœç´¢çš„å•è¯
 		crawledWords.clear();
 	}
 
@@ -104,7 +104,7 @@ public class Buckets {
 	}
 
 	/**
-	 * Ğ´ÈëdictÎÄ¼ş£¬ ±£Ö¤Ã»ÓĞÖØ¸´
+	 * å†™å…¥dictæ–‡ä»¶ï¼Œ ä¿è¯æ²¡æœ‰é‡å¤
 	 * @param words
 	 */
 	private void saveDictFile(List<String> words) {
@@ -177,7 +177,7 @@ public class Buckets {
 	
 	public static void main(String[] args) {
 		DictFile dict = new DictFile();
-		System.out.println(dict.find("apple4s¹ÙÍø"));
+		System.out.println(dict.find("apple4så®˜ç½‘"));
 		dict.close();
 	}
 }

@@ -20,7 +20,7 @@ public class Util {
 	public  static int INDEXER_WORKER_NUMBER = 6;
 	public  static int INDEXER_CACHE_SIZE = 100;
 	public  static int SLEEP_MAX_SECONDS = 30;
-	public  static String SEARCH_PATTERN = "Ïà¹ØËÑË÷</th>";
+	public  static String SEARCH_PATTERN = "ç›¸å…³æœç´¢</th>";
 	public  static int TARGET_COUNT = 100000;
 	public  static int PERSISTENT_COUNT = 1000;
 	public  static int BATCH_SIZE = 50;
@@ -41,7 +41,7 @@ public class Util {
 		SEED_WORDS.add("bootstrap");
 		SEED_WORDS.add("linux");
 		
-		// ¶ÁÈ¡ÅäÖÃ
+		// è¯»å–é…ç½®
 		try {
 			FileInputStream fin = new FileInputStream("config.ini");
 			
@@ -91,7 +91,7 @@ public class Util {
 				}
 			}
 		} catch (IOException e) {
-			System.out.println("Î´ÕÒµ½ÅäÖÃÎÄ¼ş");
+			System.out.println("æœªæ‰¾åˆ°é…ç½®æ–‡ä»¶");
 		}
 	}
 	
