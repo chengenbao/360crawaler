@@ -56,7 +56,11 @@ public class Indexer {
 					}
 					words.clear();
 					words = null;
-					Scheduler.getInstance().getBuckets().addWords(targets);
+					if (targets.size() > 0) {
+						Scheduler.getInstance().getBuckets().addWords(targets);
+					} else {
+						System.out.println(" --------------------------- blank page got ----------------------");
+					}
 					targets.clear();
 					targets = null;
 				}
@@ -72,6 +76,7 @@ public class Indexer {
 
 	public void addPage(String page) {
 		if (page == null) {
+			System.out.println(" --------------------------- blank page got ----------------------");
 			return;
 		}
 		
