@@ -94,7 +94,7 @@ public class Indexer {
 		}
 	}
 	
-	private boolean  writeToFile(String page) {
+	private static boolean  writeToFile(String page) {
 		try {
 			MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
 			messageDigest.update(page.getBytes());
@@ -112,7 +112,8 @@ public class Indexer {
 			fos.close();
 			
 			File tmpFile = new File(filename);
-			File f = new File(filename.split(".")[0]);
+			int index = filename.indexOf(Util.PAGE_TMP_FILE_SUFFIX);
+			File f = new File(filename.substring(0, index));
 			return tmpFile.renameTo(f);
 		} catch (NoSuchAlgorithmException | IOException e) {
 			logger.log(e.getMessage());
@@ -189,9 +190,7 @@ public class Indexer {
 			File dir = new File(Util.PAGES_DIR);
 
 			for (File f : dir.listFiles()) {
-				if (f.isFile()
-						&& !f.getName().endsWith(Util.PAGE_TMP_FILE_SUFFIX)) { // page
-																				// file
+				if (f.isFile() && !f.getName().endsWith(Util.PAGE_TMP_FILE_SUFFIX)) { // page file
 					FileInputStream fin = null;
 					
 					try {
@@ -238,31 +237,22 @@ public class Indexer {
 	
 	public static void main(String[] args) {
 		try {
-			FileInputStream fin = new FileInputStream("output.txt");
-			
+			FileInputStream fin = new FileInputStream("pages/eab44583cec3441a1dfb15bc80358506ee258f08.tmp");
+
 			byte[] buffer = new byte[256];
 			StringBuilder sb = new StringBuilder();
 			int num = 0;
-			
-			while((num = fin.read(buffer)) != -1 ) {
+
+			while ((num = fin.read(buffer)) != -1) {
 				if (num > 0) {
 					sb.append(new String(buffer, 0, num));
 				}
 			}
-			
+
 			fin.close();
-			
+
 			String page = sb.toString();
-			MessageDigest messageDigest;
-			try {
-				messageDigest = MessageDigest.getInstance("SHA1");
-				messageDigest.update(page.getBytes());
-				System.out.println(getFormattedText(messageDigest.digest()));
-			} catch (NoSuchAlgorithmException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
+			writeToFile(page);
 		} catch (IOException e) {
 			logger.log(e.getMessage());
 		}
