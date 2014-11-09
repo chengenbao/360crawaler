@@ -26,7 +26,6 @@ import java.util.logging.Level;
  */
 public class Buckets {
 	private LinkedBlockingQueue<String> cache = null;
-	private LinkedBlockingQueue<String> crawledWords = null; // has
 																						// been
 																						// crawed
 	private boolean stopped = false;
@@ -37,56 +36,36 @@ public class Buckets {
 	public Buckets(int cacheSz) {
 		// TODO Auto-generated constructor stub
 		cache = new LinkedBlockingQueue<String>(cacheSz);
-		crawledWords = new LinkedBlockingQueue<String>(Util.PERSISTENT_COUNT + Util.SAVE_COUNT);
 	}
 
 	public void persistent() {
 		List<String> words = new ArrayList<String>(cache); //存储未检索单词
-		saveDictFile(words); 
+		dicFile.write(words); 
 		cache.clear();
-		
-		saveCrawledWords(); // 存储已经搜索的单词
-		crawledWords.clear();
 	}
 
 	public void addWords(Collection<String> words) {
+		if (cache.size() >= Util.BUCKET_CACHE_SIZE - Util.BATCH_SIZE) { // store
+			int count = dicFile.write(cache);
+
+			synchronized (crawedWordCount) {
+				count += crawedWordCount;
+			}
+			if (count >= Util.TARGET_COUNT) {
+				Scheduler.getInstance().stop();
+				return;
+			}
+		}
+		
 		for (String word : words) {
-			if (!find(word)) {
+			if (!cache.contains(word)) {
 				try {
-					cache.put(word);
+					cache.offer(word, 2, TimeUnit.SECONDS);
 				} catch (InterruptedException e) {
 					logger.log(e.getMessage());
 				}
 			}
 		}
-	}
-
-	private void saveCrawledWords() {
-		List<String> words = new ArrayList<String>();
-		int i = 0;
-		int size = crawledWords.size();
-		
-		while( i < size) {
-			String word;
-			try {
-				word = crawledWords.poll(1, TimeUnit.SECONDS);
-				if (word != null) {
-					words.add(word);
-				}
-			} catch (InterruptedException e) {
-				logger.log(e.getMessage());
-			}	
-			++i;
-		}
-		
-		saveDictFile(words);
-	}
-
-	private boolean find(String word) {
-		Set<String> tmp = null;
-		tmp = new HashSet<String>(crawledWords);
-		
-		return cache.contains(word) || tmp.contains(word);
 	}
 
 	private boolean checkForTerminate() {
@@ -104,16 +83,6 @@ public class Buckets {
 		return shouldTerminated;
 	}
 
-	/**
-	 * 写入dict文件， 保证没有重复
-	 * @param words
-	 */
-	private void saveDictFile(List<String> words) {
-		synchronized(crawedWordCount) {
-			crawedWordCount += dicFile.write(words);
-		}
-	}
-
 	public void start() {
 		new Thread(new Runnable() {
 
@@ -123,18 +92,22 @@ public class Buckets {
 					try {
 						Thread.sleep(1000);
 
-						List<String> words = new ArrayList<String>();
+						List<String> words = new ArrayList<String>();		
+						String word = cache.poll();
+						if (word == null) {
+							loadFromDicFile();
+						} else {
+							words.add(word);
+						}
 
 						for (int i = 0; i < Util.BATCH_SIZE; ++i) {
-							String word = cache.poll(2, TimeUnit.SECONDS);
+							word = cache.poll(2, TimeUnit.SECONDS);
 							if ( word != null ) {
 								words.add(word);
 							}
 						}
 
 						Scheduler.getInstance().getWorkQueue().addWords(words);
-						saveToCrawledWords(words);
-						
 						System.out.println("bucket size ------------------ " + cache.size());
 
 					} catch (InterruptedException e) {
@@ -144,6 +117,14 @@ public class Buckets {
 			}
 
 		}).start();
+	}
+	
+	private void loadFromDicFile() {
+		List<String> words = dicFile.loadRandomWords(Util.BATCH_SIZE);
+		
+		for(String word: words) {
+			cache.offer(word);
+		}
 	}
 
 	public void stop() {
@@ -157,23 +138,6 @@ public class Buckets {
 		
 		persistent();
 		dicFile.close();
-	}
-
-	private void saveToCrawledWords(List<String> words) {
-		for (String word : words) {
-			crawledWords.add(word);
-		}
-		
-		int count  = crawledWords.size();
-		System.out.println("================ words count " + count + " ===========================\n");
-		
-		
-		if (! checkForTerminate()) {		
-			boolean pers = (count >= Util.PERSISTENT_COUNT);
-			if (pers) {
-				saveCrawledWords();
-			}
-		}
 	}
 	
 	public static void main(String[] args) {

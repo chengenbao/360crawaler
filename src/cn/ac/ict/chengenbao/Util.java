@@ -28,6 +28,7 @@ public class Util {
 	public  static byte WORD_SPLIT_CHAR = 44;
 	public  static String PAGES_DIR = "pages";
 	public  static String PAGE_TMP_FILE_SUFFIX = ".tmp";
+	public  static int BUFFER_SIZE = 2048;
 	public static List<String> SEED_WORDS = new ArrayList<String>();
 	
 	private static void loadParams() {
@@ -82,6 +83,8 @@ public class Util {
 					Util.BATCH_SIZE = Integer.parseInt(value);
 				} else if (key.equals("bucket.save_count")) {
 					Util.SAVE_COUNT = Integer.parseInt(value);
+				} else if (key.equals("buffer.size")) {
+					Util.BUFFER_SIZE = Integer.parseInt(value);
 				} else if (key.equals("bucket.word_split_char")) {
 					Util.WORD_SPLIT_CHAR = Byte.parseByte(value);
 				} else if (key.equals("indexer.pages_dir")) {
