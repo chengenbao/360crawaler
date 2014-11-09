@@ -86,15 +86,15 @@ public class HttpRequester {
 		
 		StringBuilder sb = new StringBuilder();
 		sb.append(method + " " + uri + " HTTP/1.1\r\n");
-		sb.append("Accept: html/text\r\n");
+		sb.append("Accept: text/html, application/xhtml+xml, */*\r\n");
+		sb.append("User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko\r\n");
 		
 		// host
 		sb.append("Host: " + host);
 		if (port != 80) {
 			sb.append(":" + port);
 		}
-		sb.append("\r\n");
-		
+		sb.append("\r\n");	
 		// connection type
 		sb.append("Connection: close\r\n");
 		
