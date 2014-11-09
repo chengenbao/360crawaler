@@ -15,7 +15,7 @@ public class Util {
 	public final static int BUCKET_CACHE_SIZE = 1000;
 	public final static int WORK_QUEUE_SIZE = 2000;
 	public final static int INDEXER_WORKER_NUMBER = 6;
-	public final static int INDEXER_CACHE_SIZE = 1000;
+	public final static int INDEXER_CACHE_SIZE = 100;
 	public final static int SLEEP_MAX_SECONDS = 30;
 	public final static String SEARCH_PATTERN = "Ïà¹ØËÑË÷</th>";
 	public final static int TARGET_COUNT = 100000;

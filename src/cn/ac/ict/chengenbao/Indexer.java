@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -48,23 +49,16 @@ public class Indexer {
 				
 				if (page != null) {
 					List<String> words = processPage(page);
-					List<String> targets = new ArrayList<String>(words);
+					Set<String> targets = new HashSet<String>();
 					
-					for(String word: words) {
-						String[] arr = word.split(" ");
-						
-						for(String str: arr) {
-							targets.add(str);
-						}
-						
-						targets.add(word);
+					for(String word: words) {						
+						targets.addAll(processWord(word));
 					}
-					
 					words.clear();
-					words = new ArrayList<String>(new HashSet<String>(targets));
+					words = null;
+					Scheduler.getInstance().getBuckets().addWords(targets);
 					targets.clear();
-					
-					Scheduler.getInstance().getBuckets().addWords(words);
+					targets = null;
 				}
 			}
 		}
@@ -235,26 +229,55 @@ public class Indexer {
 		return page;
 	}
 	
-	public static void main(String[] args) {
-		try {
-			FileInputStream fin = new FileInputStream("pages/eab44583cec3441a1dfb15bc80358506ee258f08.tmp");
-
-			byte[] buffer = new byte[256];
-			StringBuilder sb = new StringBuilder();
-			int num = 0;
-
-			while ((num = fin.read(buffer)) != -1) {
-				if (num > 0) {
-					sb.append(new String(buffer, 0, num));
+	/**
+	 * 
+	 * @param b
+	 * @return 字符是不是ascii
+	 */
+	private static boolean isAscii(byte b) {
+		if (b >= 0 && b < 128) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	private static Set<String> processWord(String word) {
+		Set<String> result = new HashSet<String>();
+		
+		result.add(word);
+		String[] strArray = word.split(" ");
+		
+		for(String str: strArray) {
+			result.add(str); // add self
+			
+			// split Chinese and English
+			byte[] buffer = str.getBytes();
+			int lastPos = 0;
+			
+			for(int i = 0; i < buffer.length; ++i) {
+				boolean flag = isAscii(buffer[lastPos]);
+				while(i < buffer.length && isAscii(buffer[i]) == flag) { // same kind char
+					++i;
 				}
+				
+				int len = i - lastPos;
+				if (len > 0) {
+					String tmp = new String(buffer, lastPos, len);
+					result.add(tmp);
+				}
+				lastPos = i;
 			}
-
-			fin.close();
-
-			String page = sb.toString();
-			writeToFile(page);
-		} catch (IOException e) {
-			logger.log(e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	public static void main(String[] args) {
+		Set<String> result = processWord("中国hadoop");
+		
+		for(String str: result) {
+			System.out.println(str);
 		}
 	}
 }

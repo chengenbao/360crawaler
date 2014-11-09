@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,7 +49,7 @@ public class Buckets {
 		crawledWords.clear();
 	}
 
-	public void addWords(List<String> words) {
+	public void addWords(Collection<String> words) {
 		for (String word : words) {
 			if (!find(word)) {
 				try {
