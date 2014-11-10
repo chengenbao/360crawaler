@@ -127,19 +127,17 @@ public class Buckets {
 		int size = Util.BATCH_SIZE * 2;
 		// 先从dictFileCache中加载
 		for(int i = 0; i < size; ++i) {
-			String e = null;
-			try {
-				e = dictFileCache.poll(1, TimeUnit.SECONDS);
-			} catch (InterruptedException e1) {
-				logger.log(e1.getMessage());
-			}
+			String e = dictFileCache.poll();
 			if (e != null) {
 				cache.offer(e);
+			} else {
+				break;
 			}
 		}
 		
-		if (cache.size() == 0) {
-			List<String> words = dicFile.loadRandomWords(size);
+		if (cache.size() < size) {
+			System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<< Loading from dict file >>>>>>>>>>>>>>>>>>>>>>");
+			List<String> words = dicFile.loadRandomWords(size - cache.size());
 			for (String word : words) {
 				cache.offer(word);
 			}
