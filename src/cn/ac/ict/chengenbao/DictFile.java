@@ -207,7 +207,7 @@ public class DictFile {
 		
 		try {
 			FileInputStream fin = new FileInputStream(Util.SAVE_FILE_NAME);
-			FileLock lock = lockFos.getChannel().lock();
+			FileLock lock = lockFos.getChannel().lock(0, Integer.MAX_VALUE, false);;
 			
 			int filesize = fin.available();
 			int byteCount = count * 8; // 每个单词最多（估计值）占8个字节
@@ -269,7 +269,7 @@ public class DictFile {
 		int size = 0;
 		try {
 			FileInputStream fin = new FileInputStream(Util.SAVE_FILE_NAME);
-			FileLock lock = lockFos.getChannel().lock();
+			FileLock lock = lockFos.getChannel().lock(0, Integer.MAX_VALUE, false);;
 			byte[] buffer = new byte[Util.BUFFER_SIZE];
 			int num = 0;
 			
