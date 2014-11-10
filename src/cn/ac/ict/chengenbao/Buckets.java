@@ -50,14 +50,6 @@ public class Buckets {
 			boolean suc = dictFileCache.offer(word);
 			if (!suc) {
 				int count = dicFile.write(dictFileCache);
-				synchronized (crawedWordCount) {
-					count += crawedWordCount;
-				}
-				
-				if (count >= Util.TARGET_COUNT) {
-					Scheduler.getInstance().stop();
-					return;
-				}
 				dictFileCache.clear();
 			}
 			dictFileCache.offer(word);
@@ -70,19 +62,13 @@ public class Buckets {
 		}
 	}
 
-	private boolean checkForTerminate() {
-		int count = 0;
+	private void checkForTerminate() {
+		int count = dicFile.count();
 		
-		synchronized(crawedWordCount) {
-			count += crawedWordCount;
-		}
-		
-		boolean shouldTerminated = (count >= Util.TARGET_COUNT);
-		if (shouldTerminated) {
+		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>> dict file words count " + count);
+		if (count >= Util.TARGET_COUNT) {
 			Scheduler.getInstance().stop();
 		}
-
-		return shouldTerminated;
 	}
 
 	public void start() {
@@ -119,11 +105,28 @@ public class Buckets {
 			}
 
 		}).start();
+		
+		// check for terminat
+		new Thread(new Runnable() {
+			@Override
+			public void run() {	
+				while (!stopped) {
+					checkForTerminate();
+					try {
+						Thread.sleep(Util.CHECK_TERMINATE_INTERVAL * 1000);
+					} catch (InterruptedException e) {
+						logger.log(e.getMessage());
+					}
+				}
+			}
+			
+		}).start();;
 	}
 	
 	private void loadFromDicFile() {
+		int size = Util.BATCH_SIZE * 2;
 		// 先从dictFileCache中加载
-		for(int i = 0; i < Util.BATCH_SIZE; ++i) {
+		for(int i = 0; i < size; ++i) {
 			String e = null;
 			try {
 				e = dictFileCache.poll(1, TimeUnit.SECONDS);
@@ -136,7 +139,7 @@ public class Buckets {
 		}
 		
 		if (cache.size() == 0) {
-			List<String> words = dicFile.loadRandomWords(Util.BATCH_SIZE);
+			List<String> words = dicFile.loadRandomWords(size);
 			for (String word : words) {
 				cache.offer(word);
 			}

@@ -164,7 +164,7 @@ public class DictFile {
 			if (buffer[i] == Util.WORD_SPLIT_CHAR) { // get it
 				if (i - lastPos == word.getBytes().length) { // length match
 					for (byte b : word.getBytes()) { // compare every byte
-						if (lastPos >= i || b != buffer[lastPos]) {
+						if (b != buffer[lastPos]) {
 							break;
 						}
 						++lastPos;
@@ -175,6 +175,20 @@ public class DictFile {
 					}
 				}
 				lastPos = i + 1; //next charator
+			}
+		}
+		
+		// find in the end
+		if ( lastPos < end && end - lastPos == word.getBytes().length) {
+			for (byte b : word.getBytes()) { // compare every byte
+				if (b != buffer[lastPos]) {
+					break;
+				}
+				++lastPos;
+			}
+			
+			if (lastPos == end) {
+				return true;
 			}
 		}
 
@@ -249,5 +263,31 @@ public class DictFile {
 		} catch (IOException e) {
 			logger.log(e.getMessage());
 		}
+	}
+	
+	public int count() {
+		int size = 0;
+		try {
+			FileInputStream fin = new FileInputStream(Util.SAVE_FILE_NAME);
+			FileLock lock = lockFos.getChannel().lock();
+			byte[] buffer = new byte[Util.BUFFER_SIZE];
+			int num = 0;
+			
+			while( (num = fin.read(buffer)) != -1) {
+				for(int i = 0; i < num; ++i) {
+					if (buffer[i] == Util.WORD_SPLIT_CHAR ) {
+						++size;
+					}
+				}
+			}
+			
+			lock.release();
+			fin.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			logger.log(e.getMessage());
+		}
+		
+		return size;	
 	}
 }

@@ -30,6 +30,7 @@ public class Util {
 	public  static String PAGE_TMP_FILE_SUFFIX = ".tmp";
 	public  static int BUFFER_SIZE = 2048;
 	public static List<String> SEED_WORDS = new ArrayList<String>();
+	protected static int CHECK_TERMINATE_INTERVAL = 30;
 	
 	private static void loadParams() {
 		SEED_WORDS.add("hadoop");
@@ -91,6 +92,8 @@ public class Util {
 					Util.PAGES_DIR = value;
 				} else if (key.equals("indexer.page_tmp_file_suffix")) {
 					Util.PAGE_TMP_FILE_SUFFIX = value;
+				} else if (key.equals("bucket.check_terminate_interval")) {
+					Util.CHECK_TERMINATE_INTERVAL = Integer.parseInt(value);
 				}
 			}
 		} catch (IOException e) {

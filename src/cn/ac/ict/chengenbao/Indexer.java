@@ -203,7 +203,7 @@ public class Indexer {
 						fin = new FileInputStream(f);
 
 						// read file
-						byte[] buffer = new byte[1024];
+						byte[] buffer = new byte[Util.BUFFER_SIZE];
 						int num = 0;
 						StringBuilder sb = new StringBuilder();
 
@@ -284,7 +284,7 @@ public class Indexer {
 			FileInputStream fin = new FileInputStream("output.txt");
 			
 			StringBuilder sb = new StringBuilder();
-			byte[] buffer = new byte[1024];
+			byte[] buffer = new byte[Util.BUFFER_SIZE];
 			int num = 0;
 			
 			while((num = fin.read(buffer)) != -1) {
